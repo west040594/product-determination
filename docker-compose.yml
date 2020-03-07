@@ -1,0 +1,140 @@
+version: '2'
+networks:
+  lan:
+services:
+  rabbitmq:
+    image: "pcloud/rabbitmq-stomp:3"
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+        - "15672:15672"
+        - "5672:5672"
+        - "61613:61613"
+    volumes:
+        - ./rabbit:/var/lib/rabbitmq
+    environment:
+        - RABBITMQ_DEFAULT_USER=west223
+        - RABBITMQ_DEFAULT_PASS=westwest223
+    networks:
+        - lan
+   
+  dbpostgres:
+    image: postgres:9.5
+    container_name: dbpostgres
+    hostname: dbpostgres
+    restart: always
+    environment:
+      POSTGRES_USER: west223
+      POSTGRES_PASSWORD: westwest223
+      POSTGRES_MULTIPLE_DATABASES: productdb,userdb
+      #POSTGRES_DB: productdb
+    ports:
+        - "5432:5432"
+    networks:
+        - lan
+    volumes:
+        - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+        - ./postgres/lib:/var/lib/postgresql
+        - ./postgres/log:/var/log/postgresql
+        - ./postgres/etc:/etc/postgresql
+
+  selenium-hub:
+    image: selenium/hub:3.141.59-bismuth
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+    environment:
+      - GRID_BROWSER_TIMEOUT=360000
+      - GRID_TIMEOUT=360000
+      - SE_OPTS=-timeout 360000
+    networks:
+        - lan
+  firefox:
+    image: selenium/node-firefox:3.141.59-bismuth
+    container_name: firefox-node
+    depends_on:
+      - selenium-hub
+    logging:
+      driver: none  
+    environment:
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+    networks:
+        - lan
+
+  authentication-system:
+    image: com.tstu/authentication-system:0.0.2-snapshot
+    container_name: authentication-system
+    ports:
+        - "8085:8085"
+    networks:
+        - lan
+
+  product-determination:
+    image: com.tstu/product-determination:0.0.1-snapshot
+    container_name: product-determination
+    #volumes:
+    #    - ./product-determination/src/main/resources/static/models:/resources/static/models
+    ports:
+        - "8081:8081"
+    networks:
+        - lan
+#
+  product-gate:
+    image: com.tstu/product-gate:0.0.1-snapshot
+    container_name: product-gate
+    ports:
+        - "8082:8082"
+    networks:
+        - lan
+
+  product-info:
+    image: com.tstu/product-info:0.0.1-snapshot
+    container_name: product-info
+    ports:
+        - "8083:8083"
+    networks:
+        - lan
+
+  review-dom-parser:
+    image: com.tstu/review-dom-parser:0.0.1-snapshot
+    container_name: review-dom-parser
+    ports:
+        - "8084:8084"
+    networks:
+        - lan
+
+
+
+#  hazelcast:
+#    image: hazelcast/hazelcast
+#    volumes:
+#        - ./config:/configFolder
+#    environment:
+#        - JAVA_OPTS=-Dhazelcast.config=/configFolder/hazelcast.xml -Dhazelcast.mancenter.url=http://mancenter:8080/hazelcast-mancenter -Dgroup.name=chat -Dgroup.password=westwest223
+#    ports:
+#        - 5701:5701
+#    links:
+#        - "management-center:mancenter"
+#
+#  management-center:
+#    image: hazelcast/management-center
+#    volumes:
+#        - ~/mancenter3.8:/mancenter-3.8
+#    environment:
+#        - MANCENTER_DATA=/mancenter-3.8
+#        # enable REST interface on management center
+#        # http://docs.hazelcast.org/docs/latest-development/manual/html/Management/Clustered_REST_via_Management_Center.html
+#        - JAVA_OPTS=-Dhazelcast.mc.rest.enabled=true
+#    ports:
+#        - 8082:8080
+#
+#  consul:
+#      image: consul:1.4.0
+#      container_name: consul
+#      hostname: localhost
+#      volumes:
+#        - ./consul/config:/consul/config
+#        - ./consul/data:/consul/data
+#      ports:
+#        - "8500:8500"
