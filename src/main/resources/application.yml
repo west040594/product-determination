@@ -1,0 +1,32 @@
+server:
+  port: 8081
+network:
+  save: true
+  files-path: src/main/resources/static
+  labels-files-path: src/main/resources/static/labels
+  models-files-path: src/main/resources/static/models
+  epochs: 60
+  batch-size: 20 #количество
+  max-paths-per-label: 100
+  layer:
+    width: 100
+    height: 100
+    channels: 3
+    seed: 42
+
+
+download:
+  image-dir: src/main/resources/static/images
+  upload-dir: src/main/resources/static/uploads
+  animals:
+    url: http://localhost:8081/api/v1/determination/download/animals.zip
+    md5: 1976a1f2b61191d2906e4f615246d63e
+    data-size: 13MB
+    zip-file: animals.zip
+  energy-drinks:
+    url: http://localhost:8081/api/v1/determination/download/energy-drinks.zip
+    md5: 5f8d031bfa569116df4b31f05769ce04
+    data-size: 3.2GB
+    zip-file: energy-drinks.zip
+
+

@@ -1,0 +1,8 @@
+network:
+  files-path: resources/static
+  labels-files-path: resources/static/labels
+  models-files-path: resources/static/models
+
+download:
+  image-dir: resources/static/images
+  upload-dir: resources/static/uploads
