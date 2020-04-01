@@ -53,7 +53,7 @@ public class NetworkConfig {
     public Map<String, DownloadProperties.FilesInfo> modelTypes(DownloadProperties downloadProperties) {
         HashMap<String, DownloadProperties.FilesInfo> modelTypes = new HashMap<>();
         modelTypes.put(ENERGY_DRINKS, downloadProperties.getEnergyDrinks());
-        modelTypes.put(ANIMALS, downloadProperties.getAnimals());
+        modelTypes.put("beer", downloadProperties.getBeer());
         return modelTypes;
     }
 

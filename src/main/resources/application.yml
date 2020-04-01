@@ -1,5 +1,12 @@
 server:
   port: 8081
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+
+
 network:
   save: true
   files-path: src/main/resources/static
@@ -18,11 +25,11 @@ network:
 download:
   image-dir: src/main/resources/static/images
   upload-dir: src/main/resources/static/uploads
-  animals:
-    url: http://localhost:8081/api/v1/determination/download/animals.zip
+  beer:
+    url: http://localhost:8081/api/v1/determination/download/beer.zip
     md5: 1976a1f2b61191d2906e4f615246d63e
     data-size: 13MB
-    zip-file: animals.zip
+    zip-file: beer.zip
   energy-drinks:
     url: http://localhost:8081/api/v1/determination/download/energy-drinks.zip
     md5: 5f8d031bfa569116df4b31f05769ce04

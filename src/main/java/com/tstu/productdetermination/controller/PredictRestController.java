@@ -26,9 +26,10 @@ public class PredictRestController {
     private final ProductPredictionService productPredictionService;
     private final Map<String, DownloadProperties.FilesInfo> modelTypes;
 
-    @PostMapping("/{modelName}")
+    @PostMapping(value = "/{modelName}", consumes = "multipart/form-data" , produces = "application/json")
     public ResponseEntity<?> predictImage(@RequestParam("file") MultipartFile file, @PathVariable("modelName") String modelName) {
         try {
+            log.info("Запрос на предсказание");
             PredictionResponse predict = productPredictionService.predict(file, modelName);
             return ResponseEntity.ok(predict);
         } catch (IOException e) {

@@ -37,6 +37,7 @@ public class ProductPredictionServiceImpl implements ProductPredictionService{
 
     @Override
     public PredictionResponse predict(MultipartFile file, String modelName) throws IOException {
+        log.info("Предсказываем продукт по изображению. Модель - {}", modelName);
         List<String> allClassLabels = getClassLabels(modelName);
         MultiLayerNetwork network = loadModel(modelName);
         //Предикт по изображению
@@ -44,7 +45,9 @@ public class ProductPredictionServiceImpl implements ProductPredictionService{
         scaler.transform(image);
         INDArray predictArray = network.output(image, false);
         List<PredictionResponse.Item> predictionList = buildPredictionList(predictArray, allClassLabels, 0.1);
-        return new PredictionResponse(predictionList);
+        PredictionResponse predictionResponse = new PredictionResponse(predictionList);
+        log.info("Продукты найдены. Ответ - {}", predictionResponse);
+        return predictionResponse;
     }
 
     @Override

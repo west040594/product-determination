@@ -14,7 +14,7 @@ public class DownloadProperties {
     private String uploadDir;
     private String imageDir;
     private FilesInfo energyDrinks;
-    private FilesInfo animals;
+    private FilesInfo beer;
 
     @Getter
     @Setter
