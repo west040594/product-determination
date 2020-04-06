@@ -4,7 +4,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 
 src/main/resources/static/images/**
-src/main/resources/static/models/**
 src/main/resources/static/uploads/**
 src/main/resources/static/train/**
 
