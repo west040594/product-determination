@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public interface ProductPredictionService {
 
@@ -30,4 +31,10 @@ public interface ProductPredictionService {
      * @throws IOException В случае если не удалось прочитать текстовый файл с наименованиями
      */
     List<String> getClassLabels(String labelsName) throws IOException;
+
+    /**
+     * Получить список всех наименований нейронных моделей
+     * @return  Коллекция со списком наименований нейронных моделей
+     */
+    Set<String> getModelAliases();
 }

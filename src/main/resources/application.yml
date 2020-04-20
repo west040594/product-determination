@@ -20,20 +20,43 @@ network:
     height: 100
     channels: 3
     seed: 42
+  predict:
+    constraint-ratio: 0.05
+  split-train-test-ratio: 0.8
 
 
 download:
   image-dir: src/main/resources/static/images
   upload-dir: src/main/resources/static/uploads
-  beer:
-    url: http://localhost:8081/api/v1/determination/download/beer.zip
-    md5: 1976a1f2b61191d2906e4f615246d63e
-    data-size: 13MB
-    zip-file: beer.zip
-  energy-drinks:
-    url: http://localhost:8081/api/v1/determination/download/energy-drinks.zip
-    md5: 5f8d031bfa569116df4b31f05769ce04
-    data-size: 3.2GB
-    zip-file: energy-drinks.zip
+  models:
+    beer:
+      url: http://localhost:8081/api/v1/determination/download/beer.zip
+      md5: 1976a1f2b61191d2906e4f615246d63e
+      data-size: 13MB
+      zip-file: beer.zip
+    energy-drinks:
+      url: http://localhost:8081/api/v1/determination/download/energy-drinks.zip
+      md5: 5f8d031bfa569116df4b31f05769ce04
+      data-size: 3.2GB
+      zip-file: energy-drinks.zip
+    animals:
+      url: http://localhost:8081/api/v1/determination/download/animals.zip
+      md5: 1976a1f2b61191d2906e4f615246d63e
+      data-size: 1.2Gmb
+      zip-file: animals.zip
 
 
+logging:
+  pattern:
+    console: "%d{yyyy-MMM-dd HH:mm:ss.SSS} %-5level %logger{15} - %msg%n"
+
+api:
+  swagger:
+    download:
+      file: Скачать файл с сервера по его наименованию
+    predict:
+      image: Предсказать продукты по фотографии
+      labels: Получить список наименований продуктов по конкретной модели
+      aliases: Получить список наименований моделей
+    train:
+      model: Тренировать нейронную модель

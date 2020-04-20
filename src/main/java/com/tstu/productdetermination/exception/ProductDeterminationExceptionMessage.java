@@ -9,4 +9,5 @@ public interface ProductDeterminationExceptionMessage extends ExceptionMessage {
     String CANNOT_FIND_MODEL_MSG = "Не удалось найти модель";
     String CANNOT_FIND_ZIP_ARCHIVE_MSG = "Не удалось найти архив c фотографиями";
     String TYPE_OF_PRODUCT_DOES_NOT_SUPPORT_MSG = "Тип продукта(имя модели) не поддерживается";
+    String PROCESS_OF_CREATE_MODEL_IS_RUNNING_MSG = "Создание модели в данный момент уже запущено";
 }

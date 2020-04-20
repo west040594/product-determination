@@ -1,13 +1,11 @@
 package com.tstu.productdetermination.utils;
 
 import com.tstu.commons.exception.PrsException;
-import com.tstu.commons.exception.PrsHttpException;
 import com.tstu.productdetermination.config.DownloadProperties;
 import com.tstu.productdetermination.exception.ProductDeterminationErrors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.nd4j.resources.Downloader;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -15,20 +13,18 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class DownloaderUtility {
 
     private final DownloadProperties downloadProperties;
-    private final Map<String, DownloadProperties.FilesInfo> modelTypes;
 
     public String Download(String modelName) throws IOException {
-        if(!modelTypes.containsKey(modelName)) {
+        if(!downloadProperties.getModels().containsKey(modelName)) {
             throw new PrsException(ProductDeterminationErrors.TYPE_OF_PRODUCT_DOES_NOT_SUPPORT);
         }
-        DownloadProperties.FilesInfo filesInfo = modelTypes.get(modelName);
+        DownloadProperties.FilesInfo filesInfo = downloadProperties.getModels().get(modelName);
 
         String resourceName = filesInfo.getZipFile().substring(0, filesInfo.getZipFile().lastIndexOf(".zip"));
         Path downloadPath = Paths.get(System.getProperty("java.io.tmpdir"), filesInfo.getZipFile());

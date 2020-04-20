@@ -19,7 +19,6 @@ import java.util.Map;
 public class FileStorageServiceImpl implements FileStorageService {
 
     private final DownloadProperties properties;
-    private final Map<String, DownloadProperties.FilesInfo> modelTypes;
 
     @Override
     public Resource loadFileAsResource(String fileName) {

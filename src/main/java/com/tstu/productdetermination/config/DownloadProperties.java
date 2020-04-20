@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 @ConfigurationProperties(value = "download")
 @Getter
@@ -13,8 +15,8 @@ public class DownloadProperties {
 
     private String uploadDir;
     private String imageDir;
-    private FilesInfo energyDrinks;
-    private FilesInfo beer;
+    private Map<String, FilesInfo> models;
+
 
     @Getter
     @Setter

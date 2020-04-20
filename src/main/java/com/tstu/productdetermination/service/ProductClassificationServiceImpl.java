@@ -1,20 +1,24 @@
 package com.tstu.productdetermination.service;
 
-import com.tstu.productdetermination.NetworkLayers;
 import com.tstu.productdetermination.config.NetworkLayerProperties;
+import com.tstu.productdetermination.models.NetworkModelData;
 import com.tstu.productdetermination.utils.DownloaderUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.datavec.api.io.filters.BalancedPathFilter;
 import org.datavec.api.io.labels.ParentPathLabelGenerator;
 import org.datavec.api.split.FileSplit;
-import org.datavec.api.split.InputSplit;
 import org.datavec.image.loader.NativeImageLoader;
 import org.datavec.image.recordreader.ImageRecordReader;
 import org.datavec.image.transform.ImageTransform;
+import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.optimize.api.InvocationType;
+import org.deeplearning4j.optimize.listeners.EvaluativeListener;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.stats.StatsListener;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.springframework.stereotype.Component;
@@ -24,9 +28,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
-
-import static java.lang.Math.toIntExact;
 
 @Component
 @Slf4j
@@ -34,94 +35,78 @@ import static java.lang.Math.toIntExact;
 public class ProductClassificationServiceImpl implements ProductClassificationService {
 
     private final NetworkLayerProperties properties;
+    private final UIServer uiServer;
+    private final StatsStorage statsStorage;
     private final ImageTransform transform;
     private final DataNormalization scaler;
     private final DownloaderUtility downloaderUtility;
 
+    @Override
+    public NetworkLayerProperties getProperties() {
+        return properties;
+    }
+
     public void train(String modelName) throws IOException {
         ParentPathLabelGenerator labelMaker = new ParentPathLabelGenerator();
+        //Создаем file split
         FileSplit fileSplit = buildFileSplit(modelName);
-        int numExamples = toIntExact(fileSplit.length());
-        int numLabels = Objects.requireNonNull(fileSplit.getRootDir().listFiles(File::isDirectory)).length;
-        BalancedPathFilter pathFilter = new BalancedPathFilter(
-                properties.getLayer().getRng(),
-                labelMaker,
-                numExamples,
-                numLabels,
-                properties.getMaxPathsPerLabel());
 
+        //Создаем данные для тренировки и тестирования
+        NetworkModelData data = buildModelData(fileSplit, labelMaker);
 
-        double splitTrainTest = 0.8;
-        InputSplit[] inputSplit = fileSplit.sample(pathFilter, splitTrainTest, 1 - splitTrainTest);
-        InputSplit trainData = inputSplit[0];
-        InputSplit testData = inputSplit[1];
+        //Получаем количество наименований и формируем нейронную модель
+        int numLabels = getNumberOfLabels(fileSplit);
+        MultiLayerNetwork network = buildNetwork(numLabels);
 
+        //Создаем image рекордеры для тестовых и тренировочных данных
+        ImageRecordReader testImageRecordReader = buildImageRecordReader(labelMaker);
+        ImageRecordReader trainImageRecordReader = buildImageRecordReader(labelMaker);
 
-        MultiLayerNetwork network = buildModel(numLabels);
-        ImageRecordReader trainRR = new ImageRecordReader(
-                properties.getLayer().getHeight(),
-                properties.getLayer().getWidth(),
-                properties.getLayer().getChannels(),
-                labelMaker);
+        //Обрабатываем данные для тестирования
+        testImageRecordReader.initialize(data.getTestData());
+        DataSetIterator testDataSetIterator = buildDataSetIterator(numLabels, testImageRecordReader);
 
+        network.setListeners(
+                new StatsListener(statsStorage, 1),
+                new ScoreIterationListener(1),
+                new EvaluativeListener(testDataSetIterator, 1, InvocationType.EPOCH_END));
 
-        log.info("Тренируем модель....");
-        DataSetIterator trainIter;
-        // Train without transformations
-        trainRR.initialize(trainData, null);
-        trainIter = new RecordReaderDataSetIterator(trainRR, properties.getBatchSize(), 1, numLabels);
-        scaler.fit(trainIter);
-        trainIter.setPreProcessor(scaler);
-        network.fit(trainIter, properties.getEpochs());
+        // Обрабатываем данные для тренировки без трансформации. и тренируем модель
+        trainImageRecordReader.initialize(data.getTrainData());
+        fitNetwork(numLabels, properties.getEpochs(), network, trainImageRecordReader);
 
-        // Train with transformations
-        trainRR.initialize(trainData, transform);
-        trainIter = new RecordReaderDataSetIterator(trainRR, properties.getBatchSize(), 1, numLabels);
-        scaler.fit(trainIter);
-        trainIter.setPreProcessor(scaler);
-        network.fit(trainIter, properties.getEpochs());
-
+        // Обрабатываем данные для тренировки с трансформацией. и тренируем модель еще раз
+        trainImageRecordReader.initialize(data.getTrainData(), transform);
+        fitNetwork(numLabels, properties.getEpochs(), network, trainImageRecordReader);
 
         if (properties.getSave()) {
-            //saveTrainData(modelName, trainIter);
-            List<String> allClassLabels = trainRR.getLabels();
+            List<String> allClassLabels = trainImageRecordReader.getLabels();
             saveModelData(modelName, network, allClassLabels);
         }
-        log.info("****************Example finished********************");
+        log.info("Завершение тренировки");
     }
 
 
-    private FileSplit buildFileSplit(String modelName) throws IOException {
+    @Override
+    public DataSetIterator buildDataSetIterator(int numLabels, ImageRecordReader imageRecordReader)  {
+        DataSetIterator dataSetIterator=
+                new RecordReaderDataSetIterator(imageRecordReader, properties.getBatchSize(), 1, numLabels);
+        scaler.fit(dataSetIterator);
+        dataSetIterator.setPreProcessor(scaler);
+        return dataSetIterator;
+    }
+
+
+    @Override
+    public FileSplit buildFileSplit(String modelName) throws IOException {
         String dataLocalPath = downloaderUtility.Download(modelName);
         File mainPath = new File(dataLocalPath);
         return new FileSplit(mainPath, NativeImageLoader.ALLOWED_FORMATS, properties.getLayer().getRng());
     }
 
-    /**
-     * Формирование модели
-     * @param numLabels
-     * @return
-     */
-    private MultiLayerNetwork buildModel(int numLabels) {
-        log.info("Собираем нейронную модель....");
-        MultiLayerNetwork network = NetworkLayers.builder()
-                .height(properties.getLayer().getHeight())
-                .width(properties.getLayer().getWidth())
-                .channels(properties.getLayer().getChannels())
-                .seed(properties.getLayer().getSeed())
-                .numLabels(numLabels)
-                .build().lenetModel();
-        network.init();
-        return network;
-    }
 
-    /**
-     * Сохранене нейронной модели и всех наименований продуктов
-     * @param network
-     * @param allClassLabels
-     * @throws IOException
-     */
-    private void saveModelData(String modelName, MultiLayerNetwork network, List<String> allClassLabels) throws IOException {
+    @Override
+    public void saveModelData(String modelName, MultiLayerNetwork network, List<String> allClassLabels) throws IOException {
         log.info("Сохраняем модель....");
         Path modelSavePath = Paths.get(properties.getModelsFilesPath(), modelName + "-model.zip");
         Path labelsSavePath = Paths.get(properties.getLabelsFilesPath(), modelName + "-labels.txt");
@@ -129,16 +114,14 @@ public class ProductClassificationServiceImpl implements ProductClassificationSe
         network.save(new File(modelSavePath.toUri()));
     }
 
-    /**
-     * Сохранение тренировачных данных
-     * @param trainIter
-     */
-    private void saveTrainData(String modelName, DataSetIterator trainIter) {
+    @Override
+    public void saveTrainData(String modelName, DataSetIterator dataSetIterator) {
         log.info("Сохраняем тренировачные данные...");
-        trainIter.reset();
-        while (trainIter.hasNext()) {
+        dataSetIterator.reset();
+        while (dataSetIterator.hasNext()) {
             Path trainDataSavePath = Paths.get(properties.getFilesPath() + "/train", "train-data-" + modelName + ".bin" );
-            trainIter.next().save(new File(trainDataSavePath.toUri()));
+            dataSetIterator.next().save(new File(trainDataSavePath.toUri()));
         }
     }
+
 }

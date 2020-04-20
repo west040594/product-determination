@@ -7,21 +7,38 @@ import org.datavec.image.transform.FlipImageTransform;
 import org.datavec.image.transform.ImageTransform;
 import org.datavec.image.transform.PipelineImageTransform;
 import org.datavec.image.transform.WarpImageTransform;
+import org.deeplearning4j.api.storage.StatsStorage;
+import org.deeplearning4j.api.storage.StatsStorageRouter;
+import org.deeplearning4j.api.storage.impl.RemoteUIStatsStorageRouter;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.primitives.Pair;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.*;
-
-import static com.tstu.commons.constants.NetworkModelTypes.ANIMALS;
-import static com.tstu.commons.constants.NetworkModelTypes.ENERGY_DRINKS;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 
 @Configuration
 @Slf4j
 public class NetworkConfig {
+
+    @Bean
+    public UIServer getUISerer() {
+        UIServer instance = UIServer.getInstance();
+        return instance;
+    }
+
+    @Bean
+    public StatsStorage statsStorage(UIServer uiServer) {
+        InMemoryStatsStorage inMemoryStatsStorage = new InMemoryStatsStorage();
+        uiServer.attach(inMemoryStatsStorage);
+        return inMemoryStatsStorage;
+    }
 
     @Bean
     public PipelineImageTransform transform(NetworkLayerProperties properties) {
@@ -47,14 +64,6 @@ public class NetworkConfig {
                 properties.getLayer().getHeight(),
                 properties.getLayer().getWidth(),
                 properties.getLayer().getChannels());
-    }
-
-    @Bean
-    public Map<String, DownloadProperties.FilesInfo> modelTypes(DownloadProperties downloadProperties) {
-        HashMap<String, DownloadProperties.FilesInfo> modelTypes = new HashMap<>();
-        modelTypes.put(ENERGY_DRINKS, downloadProperties.getEnergyDrinks());
-        modelTypes.put("beer", downloadProperties.getBeer());
-        return modelTypes;
     }
 
 }

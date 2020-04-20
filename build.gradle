@@ -33,10 +33,12 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
 
 	implementation 'org.nd4j:nd4j-native-platform:1.0.0-beta5'
-	implementation 'org.deeplearning4j:deeplearning4j-nlp:1.0.0-beta5'
+	implementation 'org.deeplearning4j:deeplearning4j-ui_2.12:1.0.0-beta5'
 	implementation 'org.deeplearning4j:deeplearning4j-zoo:1.0.0-beta5'
+	implementation 'io.springfox:springfox-swagger2:2.7.0'
+	implementation 'io.springfox:springfox-swagger-ui:2.7.0'
+	compile files('libs/commons-0.6.5-SNAPSHOT.jar')
 
-	compile files('libs/commons-0.5.8-SNAPSHOT.jar')
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

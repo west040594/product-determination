@@ -15,7 +15,8 @@ public enum ProductDeterminationErrors implements PrsErrorCode {
     CANNOT_CREATE_MODEL(6, ProductDeterminationExceptionMessage.CANNOT_CREATE_MODEL_MSG),
     CANNOT_FIND_MODEL(7, ProductDeterminationExceptionMessage.CANNOT_FIND_MODEL_MSG),
     CANNOT_FIND_ZIP_ARCHIVE(8, ProductDeterminationExceptionMessage.CANNOT_FIND_ZIP_ARCHIVE_MSG),
-    TYPE_OF_PRODUCT_DOES_NOT_SUPPORT(9, ProductDeterminationExceptionMessage.TYPE_OF_PRODUCT_DOES_NOT_SUPPORT_MSG);
+    TYPE_OF_PRODUCT_DOES_NOT_SUPPORT(9, ProductDeterminationExceptionMessage.TYPE_OF_PRODUCT_DOES_NOT_SUPPORT_MSG),
+    PROCESS_OF_CREATE_MODEL_IS_RUNNING(10, ProductDeterminationExceptionMessage.PROCESS_OF_CREATE_MODEL_IS_RUNNING_MSG);
 
 
     private Integer errorCode;
